@@ -1,3 +1,6 @@
+// HashMap - Version: Latest 
+#include <HashMap.h>
+
 // Keyboard - Version: Latest 
 #include <Keyboard.h>
 
@@ -20,16 +23,24 @@ const int GREEN = 5;
 
 const int N_KEYS = 6;
 const int N_LAYERS = 4;
+const int N_GESTURES = 12;
+const int GEST_LEN = 5;
 
 struct Kbd {
-  int pin[N_KEYS];
-  char outChar[N_LAYERS][N_KEYS];
-  int curState[N_KEYS];
-  int prevState[N_KEYS];
-  bool send[N_KEYS];
+	int pin[N_KEYS];
+	char outChar[N_LAYERS][N_KEYS];
+	int curState[N_KEYS];
+	int prevState[N_KEYS];
+	bool send[N_KEYS];
+	char gestStr[GEST_LEN];
+	bool gestWrapped;
+	int gestHead;
+	int prevGestHead;
+	bool gestComplete;
+	char gestures[N_GESTURES][GEST_LEN];
+	HashType<char*,char> hashRawArray[N_GESTURES];
+	HashMap<char*,char> hashMap = HashMap<char*,char>( hashRawArray , N_GESTURES );
 };
-
-struct Kbd kbd;
 
 // parameters for reading the joystick:
 int cursorSpeed = 10;               // output speed of X or Y movement
@@ -48,71 +59,104 @@ boolean kbdInit = true;
 int lastModeToggle = LOW;        // previous switch state
 
 void setup() {
-  kbd.pin[YELLOW] = 3;
-  kbd.pin[ORANGE] = 4;
-  kbd.pin[BLUE] = 5;
-  kbd.pin[RED] = 6;
-  kbd.pin[PURPLE] = 7;
-  kbd.pin[GREEN] = 8;
-  kbd.outChar[0][ORANGE] = 'g';
-  kbd.outChar[0][RED] = 'f';
-  kbd.outChar[0][GREEN] = 'd';
-  kbd.outChar[0][BLUE] = 's';
-  kbd.outChar[0][PURPLE] = 'a';
-  kbd.outChar[0][YELLOW] = KEY_LEFT_CTRL;
-  kbd.outChar[1][ORANGE] = 't';
-  kbd.outChar[1][RED] = 'r';
-  kbd.outChar[1][GREEN] = 'e';
-  kbd.outChar[1][BLUE] = 'w';
-  kbd.outChar[1][PURPLE] = 'q';
-  kbd.outChar[1][YELLOW] = KEY_LEFT_CTRL;
-  kbd.outChar[2][ORANGE] = 'b';
-  kbd.outChar[2][RED] = 'v';
-  kbd.outChar[2][GREEN] = 'c';
-  kbd.outChar[2][BLUE] = 'x';
-  kbd.outChar[2][PURPLE] = 'z';
-  kbd.outChar[2][YELLOW] = KEY_LEFT_CTRL;
-  for(int i=0; i<N_KEYS; i++) {
-    pinMode(kbd.pin[i], INPUT_PULLUP);
-    kbd.send[i] = false;
-    kbd.prevState[i] = HIGH;
-  }
-  
-	pinMode(startEmulation, INPUT_PULLUP);   // the switch pin
-//	pinMode(mouseLeftButton, INPUT_PULLUP);  // the left mouse button pin
+  Serial.begin(9600);
+  struct Kbd kbd;
+	kbd.pin[YELLOW] = 3;
+	kbd.pin[ORANGE] = 4;
+	kbd.pin[BLUE] = 5;
+	kbd.pin[RED] = 6;
+	kbd.pin[PURPLE] = 7;
+	kbd.pin[GREEN] = 8;
+	kbd.outChar[0][ORANGE] = 'g';
+	kbd.outChar[0][RED] = 'f';
+	kbd.outChar[0][GREEN] = 'd';
+	kbd.outChar[0][BLUE] = 's';
+	kbd.outChar[0][PURPLE] = 'a';
+	kbd.outChar[0][YELLOW] = KEY_LEFT_CTRL;
+	kbd.outChar[1][ORANGE] = 't';
+	kbd.outChar[1][RED] = 'r';
+	kbd.outChar[1][GREEN] = 'e';
+	kbd.outChar[1][BLUE] = 'w';
+	kbd.outChar[1][PURPLE] = 'q';
+	kbd.outChar[1][YELLOW] = KEY_LEFT_CTRL;
+	kbd.outChar[2][ORANGE] = 'b';
+	kbd.outChar[2][RED] = 'v';
+	kbd.outChar[2][GREEN] = 'c';
+	kbd.outChar[2][BLUE] = 'x';
+	kbd.outChar[2][PURPLE] = 'z';
+	kbd.outChar[2][YELLOW] = KEY_LEFT_CTRL;
+	for(int i=0; i<N_KEYS; i++) {
+		pinMode(kbd.pin[i], INPUT_PULLUP);
+		kbd.send[i] = false;
+		kbd.prevState[i] = HIGH;
+	}
+	
+	kbd.gestures[0] = {0,0,0,0,1};
+	
+	kbd.hashMap[0](kbd.gestures[0],'a');
+	
+	for(int i=0; i<N_KEYS; i++) {
+	  kbd.gestStr[i] = 0;
+	}
+	kbd.gestHead = 0;
+	kbd.prevGestHead = GEST_LEN-1;
 
-  Keyboard.begin();
+	pinMode(startEmulation, INPUT_PULLUP);   // the switch pin
+	//	pinMode(mouseLeftButton, INPUT_PULLUP);  // the left mouse button pin
+
+	Keyboard.begin();
 	Mouse.begin();  // take control of the mouse
 }
 
 //axis for joystick
 int readAxis(int thisAxis, int offset) {
-  // read the analog input
-  int reading = analogRead(thisAxis);
- reading = reading + offset;
+	// read the analog input
+	int reading = analogRead(thisAxis);
+//	Serial.println(reading);
+	reading = reading + offset;
 
-  // map the reading from the analog input range to the output range
-  reading = map(reading, 0, 1023, 0, cursorSpeed);
+	// map the reading from the analog input range to the output range
+	reading = map(reading, 0, 1023, 0, cursorSpeed);
 
-  // if the output reading is outside the
-  // rest position threshold,  use it
-  int distance = reading - center;
+	// if the output reading is outside the
+	// rest position threshold,  use it
+	int distance = reading - center;
 
-  if (abs(distance) < lowerThreshold) {
-    distance=0;
-  }
+	if (abs(distance) < lowerThreshold) {
+		distance=0;
+	}
+
+	// return the distance for this axis
+	return distance;
+}
+
+int readGestPos(int thisAxis, int offset) {
+	// read the analog input
+	int reading = analogRead(thisAxis);
+	reading = reading + offset;
+
+	// map the reading from the analog input range to the output range
+	reading = map(reading, 0, 1023, 0, cursorSpeed);
+
+	// if the output reading is outside the
+	// rest position threshold,  use it
+	int distance = reading - center;
+
+	if (abs(distance) < lowerThreshold) {
+		distance=0;
+	}
 
 	// return the distance for this axis
 	return distance;
 }
 
 void doMouseMode() {
-  // read and scale the two axes
+	// read and scale the two axes
 	int xReading = readAxis(A1,10);
 	int yReading = readAxis(A0,0);
-	
-  Mouse.move(xReading, yReading, 0); // (x, y, scroll mouse wheel)
-  
+
+	Mouse.move(xReading, yReading, 0); // (x, y, scroll mouse wheel)
+
 	if (digitalRead(kbd.pin[RED]) == LOW) {
 		// if the mouse is not pressed, press it
 		if (!Mouse.isPressed(MOUSE_LEFT)) {
@@ -143,61 +187,121 @@ void doMouseMode() {
 }
 
 void getKeypresses() {
-  for(int j=0; j<N_KEYS; j++) {
-    kbd.curState[j] = digitalRead(kbd.pin[j]);
-    if((kbd.curState[j]==LOW) && 
-    (kbd.curState[j]!=kbd.prevState[j])) {
-      kbd.send[j] = true;
-    }
-    kbd.prevState[j] = kbd.curState[j];
-  }
+	for(int j=0; j<N_KEYS; j++) {
+		kbd.curState[j] = digitalRead(kbd.pin[j]);
+		if((kbd.curState[j]==LOW) && 
+				(kbd.curState[j]!=kbd.prevState[j])) {
+			kbd.send[j] = true;
+		}
+		kbd.prevState[j] = kbd.curState[j];
+	}
 }
 
 void sendKeys(int layer) {
-  kbdInit = false;
-  startTime = millis();
-  for(int i=0; i<N_LAYERS; i++) {
-    for(int j=0; j<N_KEYS; j++) {
-      if(kbd.send[j]==true && (layer==i)) {
-        Keyboard.press(kbd.outChar[i][j]);
-        kbd.send[j] = false;
-      }
-    }
-  }
-  Keyboard.releaseAll();
+	kbdInit = false;
+	startTime = millis();
+	for(int i=0; i<N_LAYERS; i++) {
+		for(int j=0; j<N_KEYS; j++) {
+			if(kbd.send[j]==true && (layer==i)) {
+				Keyboard.press(kbd.outChar[i][j]);
+				kbd.send[j] = false;
+			}
+		}
+	}
+	Keyboard.releaseAll();
 }
 
 int getLayer() {
-  int layer = 0;
-  int xReading = readAxis(A1,10);
-  int yReading = readAxis(A0,0);
-  
-  if(abs(xReading) > abs(yReading)) {
-    if(xReading > 0)
-      layer=1;
-    else if(xReading < 0)
-      layer=2;
-  }
-  else {
-    if(yReading > 0)
-      layer=3;
-    else if(yReading < 0)
-      layer=4;
-  }
+	int layer = 0;
+	int xReading = readAxis(A1,10);
+	int yReading = readAxis(A0,0);
 
-  return layer;
+	if(abs(xReading) > abs(yReading)) {
+		if(xReading > 0)
+			layer=1;
+		else if(xReading < 0)
+			layer=2;
+	}
+	else {
+		if(yReading > 0)
+			layer=3;
+		else if(yReading < 0)
+			layer=4;
+	}
+
+	return layer;
 }
 
 void doKbdMode() {
-  int layer = 0;
-  
-  layer = getLayer();
-  
-  getKeypresses();
-	
+	int layer = 0;
+
+	layer = getLayer();
+
+	getKeypresses();
+
 	dtime = millis() - startTime;
 	if(kbdInit || (dtime > kbdResponseTime)) {
-	  sendKeys(layer);
+		sendKeys(layer);
+	}
+}
+
+int getPosition() {
+	int position = 0;
+	int xReading = readAxis(A1,10);
+	int yReading = readAxis(A0,0);
+
+	if(abs(xReading) >= abs(yReading)) {
+		if(xReading > 0)
+			position=1;
+		else if(xReading < 0)
+			position=2;
+	}
+	else if(abs(xReading) <= abs(yReading)) {
+		if(yReading > 0)
+			position=3;
+		else if(yReading < 0)
+			position=4;
+	}
+	
+	return position;
+}
+
+void resetGesture() {
+  for(int i=0; i<N_KEYS; i++) {
+	  kbd.gestStr[i] = 0;
+	}
+	kbd.gestHead = 0;
+	kbd.prevGestHead = GEST_LEN-1;
+}
+
+void updateGesture(int position) {
+	if((position==0) && (kbd.gestStr[kbd.prevGestHead]!=0)) {
+		kbd.gestComplete = true;
+	}
+	else if(position!=kbd.gestStr[kbd.prevGestHead]) {
+	  kbd.gestStr[kbd.gestHead] = position;
+		kbd.gestHead=(kbd.gestHead+1) % GEST_LEN;
+		kbd.prevGestHead=(kbd.prevGestHead+1) % GEST_LEN;
+	}
+}
+
+void sendGesture (int position) {
+	if(kbd.gestStr[0] == 1 && kbd.gestStr[1] == 4)
+		Keyboard.press('a');
+
+  Keyboard.releaseAll();
+}
+
+void doGestureMode() {
+	int position;
+
+	position = getPosition();
+	
+	updateGesture(position);
+	if(kbd.gestComplete) {
+		sendGesture(position);
+		resetGesture();
+		kbd.gestComplete = false;
 	}
 }
 
@@ -220,6 +324,7 @@ void loop() {
 		delay(responseDelay);
 	}
 	else {
-	  doKbdMode();
+//		doKbdMode();
+		doGestureMode();
 	}
 }
