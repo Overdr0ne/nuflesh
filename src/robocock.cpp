@@ -1,5 +1,7 @@
 // HashMap - Version: Latest 
-#include <HashMap.h>
+/*#include <HashMap.h>*/
+#include <Arduino.h>
+#include <Wire.h>
 
 // Keyboard - Version: Latest 
 #include <Keyboard.h>
@@ -38,9 +40,11 @@ struct Kbd {
 	int prevGestHead;
 	bool gestComplete;
 	char gestures[N_GESTURES][GEST_LEN];
-	HashType<char*,char> hashRawArray[N_GESTURES];
-	HashMap<char*,char> hashMap = HashMap<char*,char>( hashRawArray , N_GESTURES );
+	/*HashType<char*,char> hashRawArray[N_GESTURES];*/
+	/*HashMap<char*,char> hashMap = HashMap<char*,char>( hashRawArray , N_GESTURES );*/
 };
+
+struct Kbd kbd;
 
 // parameters for reading the joystick:
 int cursorSpeed = 10;               // output speed of X or Y movement
@@ -52,7 +56,7 @@ int center = cursorSpeed/2;         // resting position value
 
 unsigned int dtime;
 unsigned int startTime;
-int kbdResponseTime = 5;
+unsigned int kbdResponseTime = 5;
 
 boolean mouseMode = false;    // whether or not to control the mouse
 boolean kbdInit = true;
@@ -60,7 +64,6 @@ int lastModeToggle = LOW;        // previous switch state
 
 void setup() {
   Serial.begin(9600);
-  struct Kbd kbd;
 	kbd.pin[YELLOW] = 3;
 	kbd.pin[ORANGE] = 4;
 	kbd.pin[BLUE] = 5;
@@ -90,12 +93,12 @@ void setup() {
 		kbd.send[i] = false;
 		kbd.prevState[i] = HIGH;
 	}
-	
-	kbd.gestures[0] = {0,0,0,0,1};
-	
-	kbd.hashMap[0](kbd.gestures[0],'a');
-	
-	for(int i=0; i<N_KEYS; i++) {
+
+	/*kbd.gestures[0] = {0,0,0,0,1};*/
+
+	/*kbd.hashMap[0](kbd.gestures[0],'a');*/
+
+	for(int i=0; i<GEST_LEN; i++) {
 	  kbd.gestStr[i] = 0;
 	}
 	kbd.gestHead = 0;
@@ -189,7 +192,7 @@ void doMouseMode() {
 void getKeypresses() {
 	for(int j=0; j<N_KEYS; j++) {
 		kbd.curState[j] = digitalRead(kbd.pin[j]);
-		if((kbd.curState[j]==LOW) && 
+		if((kbd.curState[j]==LOW) &&
 				(kbd.curState[j]!=kbd.prevState[j])) {
 			kbd.send[j] = true;
 		}
@@ -267,7 +270,7 @@ int getPosition() {
 }
 
 void resetGesture() {
-  for(int i=0; i<N_KEYS; i++) {
+  for(int i=0; i<GEST_LEN; i++) {
 	  kbd.gestStr[i] = 0;
 	}
 	kbd.gestHead = 0;
@@ -296,7 +299,7 @@ void doGestureMode() {
 	int position;
 
 	position = getPosition();
-	
+
 	updateGesture(position);
 	if(kbd.gestComplete) {
 		sendGesture(position);
@@ -324,7 +327,7 @@ void loop() {
 		delay(responseDelay);
 	}
 	else {
-//		doKbdMode();
+		//		doKbdMode();
 		doGestureMode();
 	}
 }
