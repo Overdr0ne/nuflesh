@@ -39,27 +39,16 @@
 #include /usr/share/arduino/Arduino.mk
 
 # --- sparkfun pro micro
-BOARD_TAG         = promicro
-BOARD_SUB         = 16MHzatmega32U4
-AVRDUDE_OPTS 	   = -v
-#ARDUINO_DIR  = /home/sam/.arduino15/packages/arduino
-#ARDUINO_LIB_PATH = /home/sam/.arduino15/packages/arduino/hardware/avr/1.6.19/libraries
-#ARDUINO_LIB_PATH = /home/sam/src/arduino-1.8.3/hardware/arduino/avr/libraries
+BOARD_TAG = promicro
+BOARD_SUB = 16MHzatmega32U4
+AVRDUDE_OPTS = -v
 ARDUINO_DIR  = /home/sam/src/arduino-1.8.3
 ARDUINO_LIBS = Wire HID Keyboard Mouse
-USER_LIB_PATH = /home/sam/src/robocock/lib
-#USER_LIB_PATH = /home/sam/src/arduino-1.8.3/libraries/
-#VARIANT = promicro
-#ALTERNATE_CORE    = promicro
+PROJECT_DIR = $(HOME)/src/robocock/arduino
+USER_LIB_PATH :=  $(realpath $(PROJECT_DIR)/lib)
+OBJDIR = $(PROJECT_DIR)/bin/$(CURRENT_DIR)/$(BOARD_TAG)
+#USER_LIB_PATH = /home/sam/src/robocock/lib
 ALTERNATE_CORE_PATH = $(HOME)/.arduino15/packages/SparkFun/hardware/avr/1.1.6
-#BOARDS_TXT        = $(HOME)/.arduino15/packages/SparkFun/hardware/avr/1.1.6/boards.txt
-#BOOTLOADER_PARENT = $(HOME)/.arduino15/packages/SparkFun/hardware/avr/1.1.6/bootloaders
-#BOOTLOADER_PATH   = caterina
-#BOOTLOADER_FILE   = Caterina-promicro16.hex
-#MCU = atmega32u4
-#ARDUINO_VAR_PATH = /home/sam/.arduino15/packages/arduino/hardware/avr/1.6.19/variants
-#ISP_PROG     	   = usbasp
-#F_CPU = 16000000L
 include /home/sam/src/Arduino-Makefile/Arduino.mk
 
 # --- chipkit
