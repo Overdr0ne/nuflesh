@@ -33,11 +33,11 @@ int responseDelay = 5;        // response delay of the mouse, in ms
 int threshold = cursorSpeed/5;      // resting threshold
 int lowerThreshold = cursorSpeed/2;      // resting threshold
 int upperThreshold = 3*cursorSpeed/4;      // resting threshold
-unsigned int lowerJoyThreshold = 40;
+unsigned int lowerJoyThreshold = 60;
 int center = cursorSpeed/2;         // resting position value
 int xCenter,yCenter;
-int position=-1;
-int prevPosition=-2;
+char position=-1;
+char prevPosition=-2;
 bool sendPos;
 
 unsigned int dtime,dtimeCstick;
@@ -50,7 +50,7 @@ boolean kbdInit = true;
 int lastModeToggle = LOW;        // previous switch state
 
 void setup() {
-  Serial.begin(9600);
+	Serial.begin(9600);
 	kbd.pin[YELLOW] = 3;
 	kbd.pin[ORANGE] = 4;
 	kbd.pin[BLUE] = 5;
@@ -75,8 +75,8 @@ void setup() {
 	pinMode(startEmulation, INPUT_PULLUP);   // the switch pin
 	//	pinMode(mouseLeftButton, INPUT_PULLUP);  // the left mouse button pin
 
-	Keyboard.begin();
-	Mouse.begin();  // take control of the mouse
+	//Keyboard.begin();
+	//Mouse.begin();  // take control of the mouse
 }
 
 //axis for joystick
@@ -105,34 +105,34 @@ void doMouseMode() {
 	int xReading = readMouseAxis(A1,10);
 	int yReading = readMouseAxis(A0,0);
 
-	Mouse.move(xReading, yReading, 0); // (x, y, scroll mouse wheel)
+	//Mouse.move(xReading, yReading, 0); // (x, y, scroll mouse wheel)
 
 	if (digitalRead(kbd.pin[RED]) == LOW) {
 		// if the mouse is not pressed, press it
-		if (!Mouse.isPressed(MOUSE_LEFT)) {
-			Mouse.press(MOUSE_LEFT);
-			delay(100); // delay to enable single and double-click
-		}
+		//if (!Mouse.isPressed(MOUSE_LEFT)) {
+			//Mouse.press(MOUSE_LEFT);
+			//delay(100); // delay to enable single and double-click
+		//}
 	}
 	else {
 		// if the mouse is pressed, release it
-		if (Mouse.isPressed(MOUSE_LEFT)) {
-			Mouse.release(MOUSE_LEFT);
-		}
+		//if (Mouse.isPressed(MOUSE_LEFT)) {
+			//Mouse.release(MOUSE_LEFT);
+		//}
 	}
 
 	if (digitalRead(kbd.pin[GREEN]) == LOW) {
 		// if the mouse is not pressed, press it
-		if (!Mouse.isPressed(MOUSE_RIGHT)) {
-			Mouse.press(MOUSE_RIGHT);
-			delay(100); // delay to enable single and double-click
-		}
+		//if (!Mouse.isPressed(MOUSE_RIGHT)) {
+			//Mouse.press(MOUSE_RIGHT);
+			//delay(100); // delay to enable single and double-click
+		//}
 	}
 	else {
 		// if the mouse is pressed, release it
-		if (Mouse.isPressed(MOUSE_RIGHT)) {
-			Mouse.release(MOUSE_RIGHT);
-		}
+		//if (Mouse.isPressed(MOUSE_RIGHT)) {
+			//Mouse.release(MOUSE_RIGHT);
+		//}
 	}
 }
 
@@ -152,11 +152,11 @@ void sendKeys() {
 	startTime = millis();
 	for(int j=0; j<N_KEYS; j++) {
 		if(kbd.send[j]==true) {
-			Keyboard.press(kbd.outChar[j]);
+			//Keyboard.press(kbd.outChar[j]);
 			kbd.send[j] = false;
 		}
 	}
-	Keyboard.releaseAll();
+	//Keyboard.releaseAll();
 }
 
 int readJoyAxis(int thisAxis, int offset, int center)
@@ -169,65 +169,70 @@ int readJoyAxis(int thisAxis, int offset, int center)
 	// rest position threshold,  use it
 	unsigned int distance = reading - center;
 
-	if (abs(distance) < lowerJoyThreshold) {
-		distance=0;
-	}
-
 	// return the distance for this axis
 	return distance;
 }
 
 void getPosition()
 {
-	int xReading = readJoyAxis(A1,30,xCenter);
-	int yReading = readJoyAxis(A0,0,yCenter);
-
-	if(xReading==0 && yReading==0) {
-		position=-3;
-		sendPos = false;
+	int xReading = readJoyAxis(A1,0,xCenter);
+	xReading -= 40;
+	if (abs(xReading) < 60) {
+		xReading=0;
 	}
-	else
-		sendPos = true;
+
+	int yReading = readJoyAxis(A0,0,yCenter);
+	if (abs(yReading) < 60) {
+		yReading=0;
+	}
+
+	//if(xReading==0 && yReading==0) {
+		//position=-3;
+		//sendPos = false;
+	//}
+	//else
+		//sendPos = true;
 
 	Serial.println("X:");
 	Serial.println(xReading);
 	Serial.println("Y:");
 	Serial.println(yReading);
-	//delay(100);
+	//delay(10);
 
-	if(abs(xReading) >= abs(yReading)) {
+	if(xReading==0 && yReading==0) {
+		position = 0;
+		sendPos = true;
+	}
+	else if(abs(xReading) >= abs(yReading)) {
 		if(xReading > 0)
-			position=KEY_RIGHT_ARROW;
+			position='r';
 		else if(xReading < 0)
-			position=KEY_LEFT_ARROW;
+			position='l';
 	}
 	else if(abs(xReading) < abs(yReading)) {
 		if(yReading > 0)
-			position=KEY_DOWN_ARROW;
+			position='d';
 		else if(yReading < 0)
-			position=KEY_UP_ARROW;
+			position='u';
 	}
 }
 
 void sendPosition()
 {
+	HID_ hid;
+	hid.begin();
+	char sendBuf[1];
 	if(position==prevPosition)
 		return;
 	prevPosition = position;
 	startTimeCstick = millis();
+	sendBuf[0] = position;
 	if(sendPos)
-		Keyboard.press(position);
-	Keyboard.release(position);
+		hid.SendReport(123,sendBuf,1);
 }
 
 void doKbdMode()
 {
-	HID_ hid;
-	unsigned char test[3];
-	test[0]='a';
-	test[1]='b';
-	test[2]='c';
-
 	getKeypresses();
 	getPosition();
 
@@ -239,7 +244,6 @@ void doKbdMode()
 	if(kbdInit || (dtimeCstick > cStickResponseTime)) {
 		sendPosition();
 	}
-	hid.SendReport(123,(void *)test,3);
 }
 
 void loop()
