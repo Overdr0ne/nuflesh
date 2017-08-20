@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
 	std::string gestStr;
 	int res;
 	unsigned char buf[256];
+	char sendBuf[1];
 	char cmd,key;
 	#define MAX_STR 255
 	wchar_t wstr[MAX_STR];
@@ -46,6 +47,16 @@ int main(int argc, char* argv[])
 	char outKey;
 	std::string keyStr;
 	std::map<std::string,char> gestMap;
+	const int POS_CMD = 1;
+	const int KEY_DN_CMD = 2;
+	const int KEY_UP_CMD = 3;
+	const int SHIFT_L = 0;
+	const int CTRL_L = 1;
+	const int ALT_L = 2;
+	const int GUI_L = 3;
+	const int ESC = 4;
+	const int ENTER = 5;
+	char modBuf[32];
 	xdo_t * xdo = xdo_new(":0.0");
 
 #ifdef WIN32
@@ -86,16 +97,52 @@ int main(int argc, char* argv[])
 		printf("cmd: %i\n",cmd);
 		printf("key: %c\n",key);
 
-		if(key==0) {
-			std::cout << "string ended" << std::endl;
-			std::cout << "string: " << gestStr << std::endl;
-			std::cout << "outchar: " << gestMap[gestStr] << std::endl;
-			keyStr = gestMap[gestStr];
-			xdo_send_keysequence_window(xdo, CURRENTWINDOW, keyStr.c_str(), 0);
-			gestStr = "";
+		if(cmd==POS_CMD) {
+				if(key==0) {
+					std::cout << "string ended" << std::endl;
+					std::cout << "string: " << gestStr << std::endl;
+					std::cout << "outchar: " << gestMap[gestStr] << std::endl;
+					keyStr = gestMap[gestStr];
+					xdo_send_keysequence_window(xdo, CURRENTWINDOW, keyStr.c_str(), 0);
+					gestStr = "";
+				}
+				else {
+					gestStr += key;
+				}
 		}
-		else {
-			gestStr += key;
+		else if(cmd==KEY_DN_CMD || cmd==KEY_UP_CMD) {
+			switch(key) {
+				case SHIFT_L:
+					snprintf(modBuf,sizeof(modBuf),"Shift_L");
+					break;
+				case CTRL_L:
+					snprintf(modBuf,sizeof(modBuf),"Control_L");
+					break;
+				case ALT_L:
+					snprintf(modBuf,sizeof(modBuf),"Alt_L");
+					break;
+				case GUI_L:
+					snprintf(modBuf,sizeof(modBuf),"Gui_L");
+					break;
+				case ESC:
+					snprintf(modBuf,sizeof(modBuf),"Esc");
+					break;
+				case ENTER:
+					snprintf(modBuf,sizeof(modBuf),"Enter");
+					break;
+				default:
+					std::cerr << "ERROR: unrecognized modifier" << std::endl;
+			}
+			if(cmd==KEY_DN_CMD) {
+				std::cout << "key down: " << (int)key << std::endl;
+				xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, modBuf, 0);
+			}
+			else if(cmd==KEY_UP_CMD) {
+				std::cout << "key up: " << (int)key << std::endl;
+				xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, modBuf, 0);
+			}
+			else
+				std::cerr << "ERROR: unrecognized command" << std::endl;
 		}
 	}
 
