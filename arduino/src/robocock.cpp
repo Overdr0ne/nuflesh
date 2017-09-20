@@ -1,11 +1,19 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Keyboard.h>
-#include <Mouse.h>
 
 const int POS_CMD = 1;
 const int KEY_DN_CMD = 2;
 const int KEY_UP_CMD = 3;
+const int MOUSE_MV_CMD = 4;
+const int MOUSE_DN_CMD = 5;
+const int MOUSE_UP_CMD = 6;
+
+const int MOUSE_LEFT = 1;
+const int MOUSE_MIDDLE = 2;
+const int MOUSE_RIGHT = 3;
+const int MOUSE_WHL_UP = 4;
+const int MOUSE_WHL_DN = 5;
 
 // Define Pins
 const int startEmulation = 2;      // switch to turn on and off mouse emulation
@@ -118,14 +126,30 @@ int readMouseAxis(int thisAxis, int offset) {
 	return distance;
 }
 
+void sendMousePosition(int xReading, int yReading)
+{
+	char sendBuf[2];
+	HID_ hid;
+	sendBuf[0] = (char)xReading;
+	sendBuf[1] = (char)yReading;
+	hid.begin();
+	hid.SendReport(MOUSE_MV_CMD,sendBuf,2);
+}
+
 void doMouseMode() {
 	// read and scale the two axes
 	int xReading = readMouseAxis(A1,10);
 	int yReading = readMouseAxis(A0,0);
 
-	//Mouse.move(xReading, yReading, 0); // (x, y, scroll mouse wheel)
+	sendMousePosition(xReading,yReading);
+
+	char sendBuf[1];
+	HID_ hid;
+	hid.begin();
 
 	if (digitalRead(kbd.pin[RED]) == LOW) {
+		sendBuf[0] = MOUSE_LEFT;
+		hid.SendReport(MOUSE_DN_CMD,sendBuf,1);
 		// if the mouse is not pressed, press it
 		//if (!Mouse.isPressed(MOUSE_LEFT)) {
 			//Mouse.press(MOUSE_LEFT);
@@ -133,6 +157,8 @@ void doMouseMode() {
 		//}
 	}
 	else {
+		sendBuf[0] = MOUSE_LEFT;
+		hid.SendReport(MOUSE_UP_CMD,sendBuf,1);
 		// if the mouse is pressed, release it
 		//if (Mouse.isPressed(MOUSE_LEFT)) {
 			//Mouse.release(MOUSE_LEFT);
@@ -140,6 +166,8 @@ void doMouseMode() {
 	}
 
 	if (digitalRead(kbd.pin[GREEN]) == LOW) {
+		sendBuf[0] = MOUSE_RIGHT;
+		hid.SendReport(MOUSE_DN_CMD,sendBuf,1);
 		// if the mouse is not pressed, press it
 		//if (!Mouse.isPressed(MOUSE_RIGHT)) {
 			//Mouse.press(MOUSE_RIGHT);
@@ -147,6 +175,8 @@ void doMouseMode() {
 		//}
 	}
 	else {
+		sendBuf[0] = MOUSE_RIGHT;
+		hid.SendReport(MOUSE_UP_CMD,sendBuf,1);
 		// if the mouse is pressed, release it
 		//if (Mouse.isPressed(MOUSE_RIGHT)) {
 			//Mouse.release(MOUSE_RIGHT);
@@ -231,12 +261,12 @@ void getPosition()
 {
 	int xReading = readJoyAxis(A1,0,xCenter);
 	xReading -= 40;
-	if (abs(xReading) < 60) {
+	if (abs(xReading) < 100) {
 		xReading=0;
 	}
 
 	int yReading = readJoyAxis(A0,0,yCenter);
-	if (abs(yReading) < 60) {
+	if (abs(yReading) < 100) {
 		yReading=0;
 	}
 
@@ -247,11 +277,11 @@ void getPosition()
 	//else
 		//sendPos = true;
 
-	//Serial.println("X:");
-	//Serial.println(xReading);
-	//Serial.println("Y:");
-	//Serial.println(yReading);
-	//delay(10);
+	Serial.println("X:");
+	Serial.println(xReading);
+	Serial.println("Y:");
+	Serial.println(yReading);
+	delay(10);
 
 	if(xReading==0 && yReading==0) {
 		position = 0;

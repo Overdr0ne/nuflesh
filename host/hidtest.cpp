@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	int res;
 	unsigned char buf[256];
 	char sendBuf[1];
-	char cmd,key;
+	char cmd,key,xDist,yDist;
 	#define MAX_STR 255
 	wchar_t wstr[MAX_STR];
 	hid_device *handle;
@@ -50,6 +50,9 @@ int main(int argc, char* argv[])
 	const int POS_CMD = 1;
 	const int KEY_DN_CMD = 2;
 	const int KEY_UP_CMD = 3;
+	const int MOUSE_MV_CMD = 4;
+	const int MOUSE_DN_CMD = 5;
+	const int MOUSE_UP_CMD = 6;
 	const int SHIFT_L = 0;
 	const int CTRL_L = 1;
 	const int ALT_L = 2;
@@ -58,6 +61,7 @@ int main(int argc, char* argv[])
 	const int ENTER = 5;
 	char modBuf[32];
 	xdo_t * xdo = xdo_new(":0.0");
+	int button;
 
 #ifdef WIN32
 	UNREFERENCED_PARAMETER(argc);
@@ -93,24 +97,25 @@ int main(int argc, char* argv[])
 			printf("%02hhx ", buf[i]);
 		printf("\n");
 		cmd = buf[0];
-		key = buf[1];
 		printf("cmd: %i\n",cmd);
 		printf("key: %c\n",key);
 
 		if(cmd==POS_CMD) {
-				if(key==0) {
-					std::cout << "string ended" << std::endl;
-					std::cout << "string: " << gestStr << std::endl;
-					std::cout << "outchar: " << gestMap[gestStr] << std::endl;
-					keyStr = gestMap[gestStr];
-					xdo_send_keysequence_window(xdo, CURRENTWINDOW, keyStr.c_str(), 0);
-					gestStr = "";
-				}
-				else {
-					gestStr += key;
-				}
+			key = buf[1];
+			if(key==0) {
+				std::cout << "string ended" << std::endl;
+				std::cout << "string: " << gestStr << std::endl;
+				std::cout << "outchar: " << gestMap[gestStr] << std::endl;
+				keyStr = gestMap[gestStr];
+				xdo_send_keysequence_window(xdo, CURRENTWINDOW, keyStr.c_str(), 0);
+				gestStr = "";
+			}
+			else {
+				gestStr += key;
+			}
 		}
 		else if(cmd==KEY_DN_CMD || cmd==KEY_UP_CMD) {
+			key = buf[1];
 			switch(key) {
 				case SHIFT_L:
 					snprintf(modBuf,sizeof(modBuf),"Shift_L");
@@ -141,9 +146,27 @@ int main(int argc, char* argv[])
 				std::cout << "key up: " << (int)key << std::endl;
 				xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, modBuf, 0);
 			}
-			else
-				std::cerr << "ERROR: unrecognized command" << std::endl;
 		}
+		else if(cmd==MOUSE_MV_CMD) {
+			xDist = buf[1];
+			yDist = buf[2];
+			printf("xDist: %i\n",xDist);
+			printf("yDist: %i\n",yDist);
+
+			xdo_move_mouse_relative(xdo, xDist, yDist);
+		}
+		else if(cmd==MOUSE_DN_CMD) {
+			button = (int)buf[1];
+			std::cout << "mouse btn: " << button << std::endl;
+			xdo_mouse_down(xdo, CURRENTWINDOW,button);
+		}
+		else if(cmd==MOUSE_UP_CMD) {
+			button = (int)buf[1];
+			std::cout << "mouse btn: " << button << std::endl;
+			xdo_mouse_up(xdo, CURRENTWINDOW,button);
+		}
+		else
+			std::cerr << "ERROR: unrecognized command" << std::endl;
 	}
 
 	hid_close(handle);
