@@ -1,0 +1,131 @@
+Cmp-Mod V01 Created by PcbNew   date = Sat 16 Sep 2017 10:25:33 PM UTC
+
+BeginCmp
+TimeStamp = 59BD9591
+Path = /59BB08ED
+Reference = J1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD9596
+Path = /59BB0A2C
+Reference = J2;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD959B
+Path = /59BB0A79
+Reference = J3;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95A0
+Path = /59BB0AFC
+Reference = J4;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95A5
+Path = /59BC8893
+Reference = J5;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95AA
+Path = /59BC88E0
+Reference = J6;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95AF
+Path = /59BC8907
+Reference = J7;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95B4
+Path = /59BC892E
+Reference = J8;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95B9
+Path = /59BC8957
+Reference = J9;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95CF
+Path = /59BC672A
+Reference = R1;
+ValeurCmp = R;
+IdModule  = Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95D4
+Path = /59BCA8E9
+Reference = X1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95D9
+Path = /59BCA886
+Reference = XG1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95DE
+Path = /59BCA91C
+Reference = XV1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95E3
+Path = /59BCA984
+Reference = Y1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95E8
+Path = /59BCA94F
+Reference = YG1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+BeginCmp
+TimeStamp = 59BD95ED
+Path = /59BCA9C3
+Reference = YV1;
+ValeurCmp = CONN_01X01_MALE;
+IdModule  = Wire_Pads:SolderWirePad_single_1mmDrill;
+EndCmp
+
+EndListe
